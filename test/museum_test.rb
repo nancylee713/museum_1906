@@ -12,8 +12,10 @@ class MuseumTest < Minitest::Test
     @gems_and_minerals = Exhibit.new("Gems and Minerals", 0)
     @dead_sea_scrolls = Exhibit.new("Dead Sea Scrolls", 10)
     @imax = Exhibit.new("IMAX", 15)
-    @bob = Patron.new("Bob", 20)
+    @bob = Patron.new("Bob", 10)
     @sally = Patron.new("Sally", 20)
+    @tj = Patron.new("TJ", 7)
+    @morgan = Patron.new("Morgan", 15)
   end
 
   def test_it_exists
@@ -82,6 +84,47 @@ class MuseumTest < Minitest::Test
     }
 
     assert_equal expected, @dmns.patrons_by_exhibit_interest
+  end
+
+  def test_patron_can_only_attend_exhibit_by_budget
+    @dmns.add_exhibit(@dead_sea_scrolls)
+    @dmns.add_exhibit(@imax)
+    @dmns.add_exhibit(@gems_and_minerals)
+
+
+    @tj.add_interest("IMAX")
+    @tj.add_interest("Dead Sea Scrolls")
+    @dmns.admit(@tj)
+
+    assert_equal ({}), @dmns.patrons_of_exhibits
+    assert_equal 7, @tj.spending_money
+
+    @bob.add_interest("Dead Sea Scrolls")
+    @bob.add_interest("IMAX")
+    @dmns.admit(@bob)
+
+    assert_equal 0, @bob.spending_money
+
+    @sally.add_interest("IMAX")
+    @sally.add_interest("Dead Sea Scrolls")
+    @dmns.admit(@sally)
+
+    assert_equal 5, @sally.spending_money
+
+    @morgan.add_interest("Gems and Minerals")
+    @morgan.add_interest("Dead Sea Scrolls")
+    @dmns.admit(@morgan)
+
+    assert_equal 5, @morgan.spending_money
+
+    expected = {
+      @dead_sea_scrolls => [@bob, @morgan],
+      @imax => [@sally],
+      @gems_and_minerals => [@morgan]
+    }
+
+    assert_equal expected, @dmns.patrons_of_exhibits
+    assert_equal 35, @dmns.revenue
   end
 
 end
